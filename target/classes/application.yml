@@ -1,0 +1,22 @@
+server:
+  port: 9000
+
+security:
+  jwt:
+    key-store: classpath:keystore.jks
+    key-store-password: letmein
+    key-pair-alias: mytestkey
+    key-pair-password: changeme
+
+
+spring:
+  datasource:
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: jdbc:sqlserver://172.16.60.8;databaseName=Oauth2
+    username: sa
+    password: Adr@2!0&@
+    hikari:
+      register-mbeans: true
+  jackson:
+    serialization:
+      INDENT_OUTPUT: true
