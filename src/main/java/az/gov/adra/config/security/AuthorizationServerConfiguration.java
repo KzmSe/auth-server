@@ -81,10 +81,6 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
     @Override
     public void configure(final ClientDetailsServiceConfigurer clients) throws Exception {
         clients.jdbc(this.dataSource);
-//        clients.inMemory()
-//                .withClient("clientId").secret("secret")
-//                .authorizedGrantTypes("password", "client_credentials", "refresh_token").scopes("read","write")
-//                .autoApprove(true);
     }
 
     @Override
