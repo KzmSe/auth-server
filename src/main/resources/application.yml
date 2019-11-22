@@ -20,3 +20,4 @@ spring:
   jackson:
     serialization:
       INDENT_OUTPUT: true
+  app-name: INTRANET
