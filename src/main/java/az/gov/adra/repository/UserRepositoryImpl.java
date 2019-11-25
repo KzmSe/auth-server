@@ -28,7 +28,7 @@ public class UserRepositoryImpl implements UserRepository {
     private static final String FIND_ALL_USERS_SQL = "select u.name, u.surname, u.email, u.img_url, p.name as position_name from users u inner join Position p on u.position_id = p.id where u.enabled = ?";
     private static final String FIND_USER_BY_USERNAME_SQL = "select u.username, u.name, u.surname, u.midname, u.gender, u.date_of_birth, u.mobile, u.home, u.email, u.img_url, r.name as region_name, d.name as department_name, s.name as section_name, p.name as position_name from users u inner join Region r on u.region_id = r.id inner join Department d on u.department_id = d.id inner join Section s on u.section_id = s.id inner join Position p on u.position_id = p.id where u.username = ? and u.enabled = ?";
     private static final String FIND_USERS_RANDOMLY_SQL = "select top 3 u.name, u.surname, u.email, u.img_url, p.name as position_name from users u inner join Position p on u.position_id = p.id where u.enabled = ? ORDER BY NEWID()";
-    private static final String FIND_USERS_BY_BIRTH_DATE_SQL = "select u.name, u.surname, u.img_url, u.date_of_birth, p.name as position_name from users u inner join Position p on u.position_id = p.id where FORMAT(date_of_birth, 'MM-dd') BETWEEN FORMAT(GETDATE(), 'MM-dd') and FORMAT(DATEADD(DAY, 7, GETDATE()), 'MM-dd') and u.enabled = ?";
+    private static final String FIND_USERS_BY_BIRTH_DATE_SQL = "select u.name, u.surname, u.img_url, u.date_of_birth, p.name as position_name from users u inner join Position p on u.position_id = p.id where FORMAT(date_of_birth, 'MM-dd') BETWEEN FORMAT(GETDATE(), 'MM-dd') and FORMAT(DATEADD(DAY, 30, GETDATE()), 'MM-dd') and u.enabled = ?";
 
     @Override
     public List<User> findAllUsers() {
