@@ -25,14 +25,17 @@ public class UserRepositoryImpl implements UserRepository {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private static final String FIND_ALL_USERS_SQL = "select u.name, u.surname, u.email, u.img_url, p.name as position_name from users u inner join Position p on u.position_id = p.id where u.enabled = ?";
+    private static final String FIND_ALL_USERS_SQL = "select u.name, u.surname, u.email, u.img_url, p.name as position_name from users u inner join Position p on u.position_id = p.id where u.enabled = ? order by u.name, u.surname OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
     private static final String FIND_USER_BY_USERNAME_SQL = "select u.username, u.name, u.surname, u.midname, u.gender, u.date_of_birth, u.mobile, u.home, u.email, u.img_url, r.name as region_name, d.name as department_name, s.name as section_name, p.name as position_name from users u inner join Region r on u.region_id = r.id inner join Department d on u.department_id = d.id inner join Section s on u.section_id = s.id inner join Position p on u.position_id = p.id where u.username = ? and u.enabled = ?";
     private static final String FIND_USERS_RANDOMLY_SQL = "select top 3 u.name, u.surname, u.email, u.img_url, p.name as position_name from users u inner join Position p on u.position_id = p.id where u.enabled = ? ORDER BY NEWID()";
-    private static final String FIND_USERS_BY_BIRTH_DATE_SQL = "select u.name, u.surname, u.img_url, u.date_of_birth, p.name as position_name from users u inner join Position p on u.position_id = p.id where FORMAT(date_of_birth, 'MM-dd') BETWEEN FORMAT(GETDATE(), 'MM-dd') and FORMAT(DATEADD(DAY, 30, GETDATE()), 'MM-dd') and u.enabled = ?";
+    private static final String FIND_USERS_BY_BIRTH_DATE_SQL = "select u.name, u.surname, u.img_url, u.date_of_birth, p.name as position_name from users u inner join Position p on u.position_id = p.id where FORMAT(date_of_birth, 'MM-dd') BETWEEN FORMAT(GETDATE(), 'MM-dd') and FORMAT(DATEADD(DAY, 30, GETDATE()), 'MM-dd') and u.enabled = ? order by u.name, u.surname OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+    private static final String FIND_TOP_USERS_BY_BIRTH_DATE_SQL = "select top 3 u.name, u.surname, u.img_url, u.date_of_birth, p.name as position_name from users u inner join Position p on u.position_id = p.id where FORMAT(date_of_birth, 'MM-dd') BETWEEN FORMAT(GETDATE(), 'MM-dd') and FORMAT(DATEADD(DAY, 30, GETDATE()), 'MM-dd') and u.enabled = ? order by u.name, u.surname";
+    private static final String FIND_COUNT_OF_ALL_USERS_SQL = "select count(*) as count from users where enabled = ?";
+    private static final String FIND_COUNT_OF_ALL_USERS_BY_BIRTH_DATE_SQL = "select count(*) as count from users where FORMAT(date_of_birth, 'MM-dd') BETWEEN FORMAT(GETDATE(), 'MM-dd') and FORMAT(DATEADD(DAY, 30, GETDATE()), 'MM-dd') and enabled = ?";
 
     @Override
-    public List<User> findAllUsers() {
-        List<User> users = jdbcTemplate.query(FIND_ALL_USERS_SQL, new Object[]{UserConstants.USER_STATUS_ENABLED}, new ResultSetExtractor<List<User>>() {
+    public List<User> findAllUsers(int offset) {
+        List<User> users = jdbcTemplate.query(FIND_ALL_USERS_SQL, new Object[]{UserConstants.USER_STATUS_ENABLED, offset, UserConstants.USER_FETCH_NEXT}, new ResultSetExtractor<List<User>>() {
             @Override
             public List<User> extractData(ResultSet rs) throws SQLException, DataAccessException {
                 List<User> usersList = new LinkedList<>();
@@ -130,8 +133,8 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public List<User> findUsersByBirthDate() {
-        List<User> users = jdbcTemplate.query(FIND_USERS_BY_BIRTH_DATE_SQL, new Object[]{UserConstants.USER_STATUS_ENABLED}, new ResultSetExtractor<List<User>>() {
+    public List<User> findUsersByBirthDate(int offset) {
+        List<User> users = jdbcTemplate.query(FIND_USERS_BY_BIRTH_DATE_SQL, new Object[]{UserConstants.USER_STATUS_ENABLED, offset, UserConstants.USER_FETCH_NEXT}, new ResultSetExtractor<List<User>>() {
             @Override
             public List<User> extractData(ResultSet rs) throws SQLException, DataAccessException {
                 List<User> usersList = new LinkedList<>();
@@ -153,6 +156,44 @@ public class UserRepositoryImpl implements UserRepository {
             }
         });
         return users;
+    }
+
+    @Override
+    public List<User> findTopUsersByBirthDate() {
+        List<User> users = jdbcTemplate.query(FIND_TOP_USERS_BY_BIRTH_DATE_SQL, new Object[]{UserConstants.USER_STATUS_ENABLED}, new ResultSetExtractor<List<User>>() {
+            @Override
+            public List<User> extractData(ResultSet rs) throws SQLException, DataAccessException {
+                List<User> usersList = new LinkedList<>();
+                while (rs.next()) {
+                    User user = new User();
+                    user.setName(rs.getString("name"));
+                    user.setSurname(rs.getString("surname"));
+                    user.setImgUrl(rs.getString("img_url"));
+                    user.setDateOfBirth(rs.getDate("date_of_birth").toLocalDate());
+
+                    Position position = new Position();
+                    position.setName(rs.getString("position_name"));
+
+                    user.setPosition(position);
+
+                    usersList.add(user);
+                }
+                return usersList;
+            }
+        });
+        return users;
+    }
+
+    @Override
+    public int findCountOfAllUsers() {
+        int totalCount = jdbcTemplate.queryForObject(FIND_COUNT_OF_ALL_USERS_SQL, new Object[] {UserConstants.USER_STATUS_ENABLED}, Integer.class);
+        return totalCount;
+    }
+
+    @Override
+    public int findCountOfAllUsersByBirthDate() {
+        int totalCount = jdbcTemplate.queryForObject(FIND_COUNT_OF_ALL_USERS_BY_BIRTH_DATE_SQL, new Object[] {UserConstants.USER_STATUS_ENABLED}, Integer.class);
+        return totalCount;
     }
 
 }

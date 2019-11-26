@@ -7,12 +7,18 @@ import java.util.List;
 
 public interface UserRepository {
 
-    List<User> findAllUsers();
+    List<User> findAllUsers(int offset);
 
     User findUserByUsername(String username) throws UserCredentialsException;
 
     List<User> findUsersRandomly();
 
-    List<User> findUsersByBirthDate();
+    List<User> findUsersByBirthDate(int offset);
+
+    List<User> findTopUsersByBirthDate();
+
+    int findCountOfAllUsers();
+
+    int findCountOfAllUsersByBirthDate();
 
 }

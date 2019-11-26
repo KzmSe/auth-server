@@ -1,6 +1,7 @@
 package az.gov.adra.controller;
 
 import az.gov.adra.constant.MessageConstants;
+import az.gov.adra.dataTransferObjects.PaginationForUsersDTO;
 import az.gov.adra.entity.User;
 import az.gov.adra.entity.response.GenericResponse;
 import az.gov.adra.exception.UserCredentialsException;
@@ -24,9 +25,32 @@ public class UserController {
 
     @GetMapping("/users")
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_HR')")
-    public GenericResponse findAllUsers() {
-        List<User> users = userService.findAllUsers();
-        return GenericResponse.withSuccess(HttpStatus.OK, "list of users", users);
+    public GenericResponse findAllUsers(@RequestParam(name = "page", required = false) Integer page) throws UserCredentialsException {
+        if (ValidationUtil.isNull(page)) {
+            throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_ONE_OR_MORE_FIELDS_ARE_EMPTY);
+        }
+
+        int total = userService.findCountOfAllUsers();
+        int totalPage = 0;
+        int offset = 0;
+
+        if (total != 0) {
+            totalPage = (int) Math.ceil((double) total / 10);
+
+            if (page != null && page >= totalPage) {
+                offset = (totalPage - 1) * 10;
+
+            } else if (page != null && page > 1) {
+                offset = (page - 1) * 10;
+            };
+        }
+
+        List<User> users = userService.findAllUsers(offset);
+        PaginationForUsersDTO dto = new PaginationForUsersDTO();
+        dto.setTotalPages(totalPage);
+        dto.setUsers(users);
+
+        return GenericResponse.withSuccess(HttpStatus.OK, "list of users", dto);
     }
 
     @GetMapping("/users/me")
@@ -57,22 +81,39 @@ public class UserController {
 
     @GetMapping("/users/birth-date")
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_HR')")
-    public GenericResponse findAllUsersByBirthDate() {
-        List<User> users = userService.findUsersByBirthDate();
-        return GenericResponse.withSuccess(HttpStatus.OK, "list of all users by birth date", users);
+    public GenericResponse findAllUsersByBirthDate(@RequestParam(name = "page", required = false) Integer page) throws UserCredentialsException {
+        if (ValidationUtil.isNull(page)) {
+            throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_ONE_OR_MORE_FIELDS_ARE_EMPTY);
+        }
+
+        int total = userService.findCountOfAllUsersByBirthDate();
+        int totalPage = 0;
+        int offset = 0;
+
+        if (total != 0) {
+            totalPage = (int) Math.ceil((double) total / 10);
+
+            if (page != null && page >= totalPage) {
+                offset = (totalPage - 1) * 10;
+
+            } else if (page != null && page > 1) {
+                offset = (page - 1) * 10;
+            };
+        }
+
+        List<User> users = userService.findUsersByBirthDate(offset);
+        PaginationForUsersDTO dto = new PaginationForUsersDTO();
+        dto.setTotalPages(totalPage);
+        dto.setUsers(users);
+
+        return GenericResponse.withSuccess(HttpStatus.OK, "list of all users by birth date", dto);
     }
 
     @GetMapping("/users/birth-date/top-three")
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_HR')")
     public GenericResponse findTopThreeUsersByBirthDate() {
-        List<User> users = userService.findUsersByBirthDate();
-        List<User> topThreeUsers = new ArrayList<>();
-        if (users.size() != 0) {
-            for (int i = 0; i < 3; i++) {
-                topThreeUsers.add(users.get(i));
-            }
-        }
-        return GenericResponse.withSuccess(HttpStatus.OK, "list of top three all users by birth date", topThreeUsers);
+        List<User> users = userService.findTopUsersByBirthDate();
+        return GenericResponse.withSuccess(HttpStatus.OK, "list of top three all users by birth date", users);
     }
 
 }

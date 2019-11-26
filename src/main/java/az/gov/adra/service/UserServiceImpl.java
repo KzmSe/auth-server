@@ -21,8 +21,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> findAllUsers() {
-        return userRepository.findAllUsers();
+    public List<User> findAllUsers(int offset) {
+        return userRepository.findAllUsers(offset);
     }
 
     @Override
@@ -42,8 +42,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> findUsersByBirthDate() {
-        return userRepository.findUsersByBirthDate();
+    public List<User> findUsersByBirthDate(int offset) {
+        return userRepository.findUsersByBirthDate(offset);
+    }
+
+    @Override
+    public List<User> findTopUsersByBirthDate() {
+        return userRepository.findTopUsersByBirthDate();
+    }
+
+    @Override
+    public int findCountOfAllUsers() {
+        return userRepository.findCountOfAllUsers();
+    }
+
+    @Override
+    public int findCountOfAllUsersByBirthDate() {
+        return userRepository.findCountOfAllUsersByBirthDate();
     }
 
 }
