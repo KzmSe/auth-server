@@ -1,14 +1,18 @@
 package az.gov.adra.repository;
 
+import az.gov.adra.constant.MessageConstants;
 import az.gov.adra.constant.UserConstants;
+import az.gov.adra.dataTransferObject.UserDTOForUpdateUser;
 import az.gov.adra.entity.*;
 import az.gov.adra.exception.UserCredentialsException;
 import az.gov.adra.repository.interfaces.UserRepository;
 import az.gov.adra.util.TimeParserUtil;
+import az.gov.adra.util.ValidationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -16,6 +20,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,17 +30,21 @@ public class UserRepositoryImpl implements UserRepository {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private static final String FIND_ALL_USERS_SQL = "select u.name, u.surname, u.email, u.img_url, p.name as position_name from users u inner join Position p on u.position_id = p.id where u.enabled = ? order by u.name, u.surname OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+    private static final String FIND_ALL_USERS_SQL = "select u.name, u.surname, u.username, u.email, u.img_url, p.name as position_name from users u inner join Position p on u.position_id = p.id where u.enabled = ? order by u.name, u.surname";
     private static final String FIND_USER_BY_USERNAME_SQL = "select u.username, u.name, u.surname, u.midname, u.gender, u.date_of_birth, u.mobile, u.home, u.email, u.img_url, r.name as region_name, d.name as department_name, s.name as section_name, p.name as position_name from users u inner join Region r on u.region_id = r.id inner join Department d on u.department_id = d.id inner join Section s on u.section_id = s.id inner join Position p on u.position_id = p.id where u.username = ? and u.enabled = ?";
+    private static final String FIND_USER_BY_EMAIL_SQL = "select token from users where email = ? and enabled = ?";
+    private static final String UPDATE_TOKEN_SQL = "update users set token = ? where token = ?";
     private static final String FIND_USERS_RANDOMLY_SQL = "select top 3 u.name, u.surname, u.email, u.img_url, p.name as position_name from users u inner join Position p on u.position_id = p.id where u.enabled = ? ORDER BY NEWID()";
     private static final String FIND_USERS_BY_BIRTH_DATE_SQL = "select u.name, u.surname, u.img_url, u.date_of_birth, p.name as position_name from users u inner join Position p on u.position_id = p.id where FORMAT(date_of_birth, 'MM-dd') BETWEEN FORMAT(GETDATE(), 'MM-dd') and FORMAT(DATEADD(DAY, 30, GETDATE()), 'MM-dd') and u.enabled = ? order by u.name, u.surname OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-    private static final String FIND_TOP_USERS_BY_BIRTH_DATE_SQL = "select top 3 u.name, u.surname, u.img_url, u.date_of_birth, p.name as position_name from users u inner join Position p on u.position_id = p.id where FORMAT(date_of_birth, 'MM-dd') BETWEEN FORMAT(GETDATE(), 'MM-dd') and FORMAT(DATEADD(DAY, 30, GETDATE()), 'MM-dd') and u.enabled = ? order by u.name, u.surname";
+    private static final String FIND_TOP_USERS_BY_BIRTH_DATE_SQL = "SELECT top 3 u.name, u.surname, u.img_url, date_of_birth, p.name as position_name FROM  users u inner join [Position] p on u.position_id = p.id WHERE 1 = (FLOOR(DATEDIFF(dd,u.date_of_birth,GETDATE()+30) / 365.25)) -(FLOOR(DATEDIFF(dd,u.date_of_birth,GETDATE()) / 365.25)) and u.enabled = ? order by u.name, u.surname";
+    private static final String UPDATE_USER_SQL = "update users set ";
+    private static final String CHANGE_PASSWORD_SQL = "update users set password = ? where token = ? and enabled = ?";
     private static final String FIND_COUNT_OF_ALL_USERS_SQL = "select count(*) as count from users where enabled = ?";
     private static final String FIND_COUNT_OF_ALL_USERS_BY_BIRTH_DATE_SQL = "select count(*) as count from users where FORMAT(date_of_birth, 'MM-dd') BETWEEN FORMAT(GETDATE(), 'MM-dd') and FORMAT(DATEADD(DAY, 30, GETDATE()), 'MM-dd') and enabled = ?";
 
     @Override
-    public List<User> findAllUsers(int offset) {
-        List<User> users = jdbcTemplate.query(FIND_ALL_USERS_SQL, new Object[]{UserConstants.USER_STATUS_ENABLED, offset, UserConstants.USER_FETCH_NEXT}, new ResultSetExtractor<List<User>>() {
+    public List<User> findAllUsers() {
+        List<User> users = jdbcTemplate.query(FIND_ALL_USERS_SQL, new Object[]{UserConstants.USER_STATUS_ENABLED}, new ResultSetExtractor<List<User>>() {
             @Override
             public List<User> extractData(ResultSet rs) throws SQLException, DataAccessException {
                 List<User> usersList = new LinkedList<>();
@@ -43,6 +52,7 @@ public class UserRepositoryImpl implements UserRepository {
                     User user = new User();
                     user.setName(rs.getString("name"));
                     user.setSurname(rs.getString("surname"));
+                    user.setUsername(rs.getString("username"));
 
                     user.setEmail(rs.getString("email"));
                     user.setImgUrl(rs.getString("img_url"));
@@ -102,6 +112,28 @@ public class UserRepositoryImpl implements UserRepository {
 
         } catch (EmptyResultDataAccessException e) {
             return null;
+        }
+    }
+
+    @Override
+    public User findUserByEmail(String email) throws UserCredentialsException {
+        User user = jdbcTemplate.queryForObject(FIND_USER_BY_EMAIL_SQL, new Object[]{email, UserConstants.USER_STATUS_ENABLED}, new RowMapper<User>() {
+            @Override
+            public User mapRow(ResultSet rs, int i) throws SQLException {
+                User user1 = new User();
+                user1.setToken(rs.getString("token"));
+                return user1;
+            }
+        });
+        return user;
+    }
+
+    @Override
+    public void updateToken(String newToken, String oldToken) throws UserCredentialsException {
+        int affectedRows = jdbcTemplate.update(UPDATE_TOKEN_SQL, newToken, oldToken);
+
+        if (affectedRows == 0) {
+            throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_INTERNAL_ERROR);
         }
     }
 
@@ -182,6 +214,52 @@ public class UserRepositoryImpl implements UserRepository {
             }
         });
         return users;
+    }
+
+    @Override
+    public void updateUser(User user) throws UserCredentialsException {
+        StringBuilder builder = new StringBuilder(UPDATE_USER_SQL);
+        List<Object> list = new LinkedList<>();
+
+        if (!ValidationUtil.isNull(user.getImgUrl())) {
+            builder.append("img_url = ?, ");
+            list.add(user.getImgUrl());
+        }
+
+        if (!ValidationUtil.isNull(user.getMobile())) {
+            builder.append("mobile = ?, ");
+            list.add(user.getMobile());
+        }
+
+        if (!ValidationUtil.isNull(user.getHome())) {
+            builder.append("home = ? ");
+            list.add(user.getHome());
+        }
+
+        builder.append("where username = ? and enabled = ?");
+        list.add(user.getUsername());
+        list.add(UserConstants.USER_STATUS_ENABLED);
+
+        Object[] parameters = list.toArray();
+
+        System.out.println("USER UPDATED");
+        System.out.println(builder.toString());
+        Arrays.stream(parameters).forEach(System.out::println);
+
+        int affectedRows = jdbcTemplate.update(builder.toString(), parameters);
+
+        if (affectedRows == 0) {
+            throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_INTERNAL_ERROR);
+        }
+    }
+
+    @Override
+    public void updatePassword(String password, String token) throws UserCredentialsException {
+        int affectedRows = jdbcTemplate.update(CHANGE_PASSWORD_SQL, password, token, UserConstants.USER_STATUS_ENABLED);
+
+        if (affectedRows == 0) {
+            throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_INTERNAL_ERROR);
+        }
     }
 
     @Override

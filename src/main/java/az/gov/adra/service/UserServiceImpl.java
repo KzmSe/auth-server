@@ -1,6 +1,7 @@
 package az.gov.adra.service;
 
 import az.gov.adra.constant.MessageConstants;
+import az.gov.adra.dataTransferObject.UserDTOForUpdateUser;
 import az.gov.adra.entity.User;
 import az.gov.adra.exception.UserCredentialsException;
 import az.gov.adra.repository.interfaces.UserRepository;
@@ -21,8 +22,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> findAllUsers(int offset) {
-        return userRepository.findAllUsers(offset);
+    public List<User> findAllUsers() {
+        return userRepository.findAllUsers();
     }
 
     @Override
@@ -34,6 +35,16 @@ public class UserServiceImpl implements UserService {
         }
 
         return user;
+    }
+
+    @Override
+    public User findUserByEmail(String email) throws UserCredentialsException {
+        return userRepository.findUserByEmail(email);
+    }
+
+    @Override
+    public void updateToken(String newToken, String oldToken) throws UserCredentialsException {
+        userRepository.updateToken(newToken, oldToken);
     }
 
     @Override
@@ -49,6 +60,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> findTopUsersByBirthDate() {
         return userRepository.findTopUsersByBirthDate();
+    }
+
+    @Override
+    public void updateUser(User user) throws UserCredentialsException {
+        userRepository.updateUser(user);
+    }
+
+    @Override
+    public void updatePassword(String password, String token) throws UserCredentialsException {
+        userRepository.updatePassword(password, token);
     }
 
     @Override
