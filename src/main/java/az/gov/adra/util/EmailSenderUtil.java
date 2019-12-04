@@ -18,6 +18,7 @@ public class EmailSenderUtil {
             message.setSubject(subject);
             message.setText(body);
             emailSender.send(message);
+
         } catch (Exception e) {
             e.printStackTrace();
         }

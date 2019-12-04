@@ -2,7 +2,6 @@ package az.gov.adra.repository;
 
 import az.gov.adra.constant.MessageConstants;
 import az.gov.adra.constant.UserConstants;
-import az.gov.adra.dataTransferObject.UserDTOForUpdateUser;
 import az.gov.adra.entity.*;
 import az.gov.adra.exception.UserCredentialsException;
 import az.gov.adra.repository.interfaces.UserRepository;
@@ -12,14 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,7 +39,7 @@ public class UserRepositoryImpl implements UserRepository {
     private static final String UPDATE_USER_SQL = "update users set ";
     private static final String CHANGE_PASSWORD_SQL = "update users set password = ? where token = ? and enabled = ?";
     private static final String FIND_COUNT_OF_ALL_USERS_SQL = "select count(*) as count from users where enabled = ?";
-    private static final String FIND_COUNT_OF_ALL_USERS_BY_BIRTH_DATE_SQL = "select count(*) as count from users where FORMAT(date_of_birth, 'MM-dd') BETWEEN FORMAT(GETDATE(), 'MM-dd') and FORMAT(DATEADD(DAY, 30, GETDATE()), 'MM-dd') and enabled = ?";
+    private static final String FIND_COUNT_OF_ALL_USERS_BY_BIRTH_DATE_SQL = "SELECT count(*) as count FROM  users u inner join Position p on u.position_id = p.id WHERE 1 = (FLOOR(DATEDIFF(dd, u.date_of_birth, GETDATE()+30) / 365.25)) -(FLOOR(DATEDIFF(dd, u.date_of_birth, GETDATE()) / 365.25)) and u.enabled = ?";
 
     @Override
     public List<User> findAllUsers() {
@@ -86,7 +85,9 @@ public class UserRepositoryImpl implements UserRepository {
                     user.setHome(rs.getString("home")); //null
                     user.setEmail(rs.getString("email"));
                     user.setImgUrl(rs.getString("img_url"));
-                    user.setDateOfBirth(rs.getDate("date_of_birth").toLocalDate());
+
+                    LocalDate birthDate = rs.getDate("date_of_birth").toLocalDate();
+                    user.setDateOfBirth(TimeParserUtil.formatBirthDate(birthDate));
 
                     Region region = new Region();
                     region.setName(rs.getString("region_name"));
@@ -175,7 +176,9 @@ public class UserRepositoryImpl implements UserRepository {
                     user.setName(rs.getString("name"));
                     user.setSurname(rs.getString("surname"));
                     user.setImgUrl(rs.getString("img_url"));
-                    user.setDateOfBirth(rs.getDate("date_of_birth").toLocalDate());
+
+                    LocalDate birthDate = rs.getDate("date_of_birth").toLocalDate();
+                    user.setDateOfBirth(TimeParserUtil.formatBirthDate(birthDate));
 
                     Position position = new Position();
                     position.setName(rs.getString("position_name"));
@@ -201,7 +204,9 @@ public class UserRepositoryImpl implements UserRepository {
                     user.setName(rs.getString("name"));
                     user.setSurname(rs.getString("surname"));
                     user.setImgUrl(rs.getString("img_url"));
-                    user.setDateOfBirth(rs.getDate("date_of_birth").toLocalDate());
+
+                    LocalDate birthDate = rs.getDate("date_of_birth").toLocalDate();
+                    user.setDateOfBirth(TimeParserUtil.formatBirthDate(birthDate));
 
                     Position position = new Position();
                     position.setName(rs.getString("position_name"));

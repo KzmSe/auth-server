@@ -107,6 +107,7 @@ public class UserController {
         }
 
         int total = userService.findCountOfAllUsersByBirthDate();
+        System.out.println(total);
         int totalPages = 0;
         int offset = 0;
 
@@ -120,6 +121,8 @@ public class UserController {
                 offset = (page - 1) * 10;
             };
         }
+
+        System.out.println(offset);
 
         List<User> users = userService.findUsersByBirthDate(offset);
         for (User user : users) {

@@ -21,7 +21,7 @@ public class User {
     private String surname;
     private String midname;
     private String gender;
-    private LocalDate dateOfBirth;
+    private String dateOfBirth;
     private String mobile;
     private String home;
     private String email;
