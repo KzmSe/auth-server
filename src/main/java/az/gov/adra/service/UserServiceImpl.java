@@ -38,11 +38,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findUserByEmail(String email) throws UserCredentialsException {
-        return userRepository.findUserByEmail(email);
-    }
-
-    @Override
     public void updateToken(String newToken, String oldToken) throws UserCredentialsException {
         userRepository.updateToken(newToken, oldToken);
     }

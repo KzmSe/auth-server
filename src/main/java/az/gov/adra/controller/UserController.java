@@ -6,7 +6,6 @@ import az.gov.adra.entity.User;
 import az.gov.adra.entity.response.GenericResponse;
 import az.gov.adra.exception.UserCredentialsException;
 import az.gov.adra.service.interfaces.UserService;
-import az.gov.adra.util.EmailSenderUtil;
 import az.gov.adra.util.ResourceUtil;
 import az.gov.adra.util.ValidationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,13 +33,7 @@ public class UserController {
     private UserService userService;
     @Autowired
     private BCryptPasswordEncoder encoder;
-    @Autowired
-    private EmailSenderUtil emailSenderUtil;
     private final int maxFileSize = 3145728;
-    @Value("${spring.email.changePassword.subject}")
-    private String subject;
-    @Value("${spring.email.changePassword.body}")
-    private String body;
     @Value("${file.upload.path.win}")
     private String imageUploadPath;
 
@@ -195,25 +188,12 @@ public class UserController {
         userService.updateUser(user);
     }
 
-    @PostMapping("/users/email")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_HR')")
-    @ResponseStatus(HttpStatus.ACCEPTED)
-    public void sendEmail(@RequestParam(value = "email", required = false) String email) throws UserCredentialsException {
-        if (ValidationUtil.isNullOrEmpty(email)) {
-            throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_ONE_OR_MORE_FIELDS_ARE_EMPTY);
-        }
-
-        User user = userService.findUserByEmail(email.trim());
-        //TODO: add thread to send email!
-        emailSenderUtil.sendEmailMessage(email, subject, String.format(body, user.getToken()));
-    }
-
 
     @PutMapping("/users/password")
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_HR')")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void updatePassword(@RequestBody UserDTOForUpdateUser dto,
-                           Principal principal) throws UserCredentialsException {
+                                Principal principal) throws UserCredentialsException {
         if (ValidationUtil.isNullOrEmpty(dto.getToken()) && ValidationUtil.isNullOrEmpty(dto.getPassword()) && ValidationUtil.isNullOrEmpty(dto.getConfirmPassword())) {
             throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_ONE_OR_MORE_FIELDS_ARE_EMPTY);
         }

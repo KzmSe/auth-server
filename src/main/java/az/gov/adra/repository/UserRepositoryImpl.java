@@ -31,7 +31,6 @@ public class UserRepositoryImpl implements UserRepository {
 
     private static final String FIND_ALL_USERS_SQL = "select u.name, u.surname, u.username, u.email, u.img_url, p.name as position_name from users u inner join Position p on u.position_id = p.id where u.enabled = ? order by u.name, u.surname";
     private static final String FIND_USER_BY_USERNAME_SQL = "select u.username, u.name, u.surname, u.midname, u.gender, u.date_of_birth, u.mobile, u.home, u.email, u.img_url, r.name as region_name, d.name as department_name, s.name as section_name, p.name as position_name from users u inner join Region r on u.region_id = r.id inner join Department d on u.department_id = d.id inner join Section s on u.section_id = s.id inner join Position p on u.position_id = p.id where u.username = ? and u.enabled = ?";
-    private static final String FIND_USER_BY_EMAIL_SQL = "select token from users where email = ? and enabled = ?";
     private static final String UPDATE_TOKEN_SQL = "update users set token = ? where token = ?";
     private static final String FIND_USERS_RANDOMLY_SQL = "select top 3 u.name, u.surname, u.email, u.img_url, p.name as position_name from users u inner join Position p on u.position_id = p.id where u.enabled = ? ORDER BY NEWID()";
     private static final String FIND_USERS_BY_BIRTH_DATE_SQL = "SELECT u.name, u.surname, u.img_url, date_of_birth, p.name as position_name FROM  users u inner join Position p on u.position_id = p.id WHERE 1 = (FLOOR(DATEDIFF(dd, u.date_of_birth, GETDATE()+30) / 365.25)) -(FLOOR(DATEDIFF(dd, u.date_of_birth, GETDATE()) / 365.25)) and u.enabled = ? order by u.name, u.surname OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
@@ -114,19 +113,6 @@ public class UserRepositoryImpl implements UserRepository {
         } catch (EmptyResultDataAccessException e) {
             return null;
         }
-    }
-
-    @Override
-    public User findUserByEmail(String email) throws UserCredentialsException {
-        User user = jdbcTemplate.queryForObject(FIND_USER_BY_EMAIL_SQL, new Object[]{email, UserConstants.USER_STATUS_ENABLED}, new RowMapper<User>() {
-            @Override
-            public User mapRow(ResultSet rs, int i) throws SQLException {
-                User user1 = new User();
-                user1.setToken(rs.getString("token"));
-                return user1;
-            }
-        });
-        return user;
     }
 
     @Override

@@ -12,8 +12,6 @@ public interface UserRepository {
 
     User findUserByUsername(String username) throws UserCredentialsException;
 
-    User findUserByEmail(String email) throws UserCredentialsException;
-
     void updateToken(String newToken, String oldToken) throws UserCredentialsException;
 
     List<User> findUsersRandomly();
