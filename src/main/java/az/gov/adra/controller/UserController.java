@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -31,8 +30,6 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-    @Autowired
-    private BCryptPasswordEncoder encoder;
     private final int maxFileSize = 3145728;
     @Value("${file.upload.path.win}")
     private String imageUploadPath;
@@ -186,37 +183,6 @@ public class UserController {
         user.setHome(dto.getHome());
 
         userService.updateUser(user);
-    }
-
-
-    @PutMapping("/users/password")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_HR')")
-    @ResponseStatus(HttpStatus.ACCEPTED)
-    public void updatePassword(@RequestBody UserDTOForUpdateUser dto,
-                                Principal principal) throws UserCredentialsException {
-        if (ValidationUtil.isNullOrEmpty(dto.getToken()) && ValidationUtil.isNullOrEmpty(dto.getPassword()) && ValidationUtil.isNullOrEmpty(dto.getConfirmPassword())) {
-            throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_ONE_OR_MORE_FIELDS_ARE_EMPTY);
-        }
-
-        User user = new User();
-        user.setUsername(principal.getName());
-
-        if (dto.getPassword().trim().length() >= 8 && dto.getConfirmPassword().trim().length() >= 8) {
-            if (dto.getPassword().equals(dto.getConfirmPassword())) {
-                try {
-                    userService.updatePassword(encoder.encode(dto.getPassword()), dto.getToken());
-                    String newToken = UUID.randomUUID().toString();
-                    userService.updateToken(newToken, dto.getToken());
-
-                } catch (UserCredentialsException e) {
-                    throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_INTERNAL_ERROR);
-                }
-            } else {
-                throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_ONE_OR_MORE_FIELDS_ARE_EMPTY);
-            }
-        } else {
-            throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_PASSWORD_MUST_CONTAINS_MINIMUM_8_CHARACTERS);
-        }
     }
 
 }
