@@ -12,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDTOForUpdateUser {
 
-    private MultipartFile multipartFile;
+    private MultipartFile file;
     private String mobile;
     private String home;
     private String token;

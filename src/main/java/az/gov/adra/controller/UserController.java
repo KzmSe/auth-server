@@ -147,24 +147,24 @@ public class UserController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void updateUser(@RequestBody UserDTOForUpdateUser dto,
                            Principal principal) throws UserCredentialsException, IOException {
-        if (ValidationUtil.isNull(dto.getMultipartFile()) && ValidationUtil.isNullOrEmpty(dto.getMobile()) && ValidationUtil.isNullOrEmpty(dto.getHome())) {
+        if (ValidationUtil.isNull(dto.getFile()) && ValidationUtil.isNullOrEmpty(dto.getMobile()) && ValidationUtil.isNullOrEmpty(dto.getHome())) {
             throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_ONE_OR_MORE_FIELDS_ARE_EMPTY);
         }
 
         User user = new User();
         user.setUsername(principal.getName());
 
-        if (dto.getMultipartFile() == null || dto.getMultipartFile().isEmpty()) {
+        if (dto.getFile() == null || dto.getFile().isEmpty()) {
             user.setImgUrl(null);
 
         } else {
-            if (!(dto.getMultipartFile().getOriginalFilename().endsWith(".jpg")
-                    || dto.getMultipartFile().getOriginalFilename().endsWith(".jpeg")
-                    || dto.getMultipartFile().getOriginalFilename().endsWith(".png"))) {
+            if (!(dto.getFile().getOriginalFilename().endsWith(".jpg")
+                    || dto.getFile().getOriginalFilename().endsWith(".jpeg")
+                    || dto.getFile().getOriginalFilename().endsWith(".png"))) {
                 throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_INVALID_FILE_TYPE);
             }
 
-            if (dto.getMultipartFile().getSize() >= maxFileSize) {
+            if (dto.getFile().getSize() >= maxFileSize) {
                 throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_FILE_SIZE_MUST_BE_SMALLER_THAN_5MB);
             }
 
@@ -174,9 +174,9 @@ public class UserController {
                 Files.createDirectories(pathToSaveFile);
             }
 
-            String fileName = UUID.randomUUID() + "##" + dto.getMultipartFile().getOriginalFilename();
+            String fileName = UUID.randomUUID() + "##" + dto.getFile().getOriginalFilename();
             Path fullFilePath = Paths.get(pathToSaveFile.toString(), fileName);
-            Files.copy(dto.getMultipartFile().getInputStream(), fullFilePath, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(dto.getFile().getInputStream(), fullFilePath, StandardCopyOption.REPLACE_EXISTING);
             Path pathToSaveDb = Paths.get("profiles", user.getUsername(), fileName);
 
             user.setImgUrl(DatatypeConverter.printHexBinary(pathToSaveDb.toString().getBytes()));
