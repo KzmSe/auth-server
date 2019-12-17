@@ -201,21 +201,27 @@ public class UserRepositoryImpl implements UserRepository {
         List<Object> list = new LinkedList<>();
 
         if (!ValidationUtil.isNull(user.getImgUrl())) {
-            builder.append("img_url = ?, ");
+            builder.append("img_url = ?");
             list.add(user.getImgUrl());
+            if (user.getMobile() != null || user.getHome() != null) {
+                builder.append(", ");
+            }
         }
 
         if (!ValidationUtil.isNull(user.getMobile())) {
-            builder.append("mobile = ?, ");
+            builder.append("mobile = ?");
             list.add(user.getMobile());
+            if (user.getHome() != null) {
+                builder.append(", ");
+            }
         }
 
         if (!ValidationUtil.isNull(user.getHome())) {
-            builder.append("home = ? ");
+            builder.append("home = ?");
             list.add(user.getHome());
         }
 
-        builder.append("where username = ? and enabled = ?");
+        builder.append(" where username = ? and enabled = ?");
         list.add(user.getUsername());
         list.add(UserConstants.USER_STATUS_ENABLED);
 
