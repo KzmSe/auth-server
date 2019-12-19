@@ -3,6 +3,7 @@ package az.gov.adra.entity;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.LinkedList;
@@ -10,6 +11,7 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
+@ToString
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Department {
 

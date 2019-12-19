@@ -171,7 +171,7 @@ public class UserController {
                 Files.createDirectories(pathToSaveFile);
             }
 
-            String fileName = UUID.randomUUID() + "##" + dto.getFile().getOriginalFilename();
+            String fileName = UUID.randomUUID() + "&&" + dto.getFile().getOriginalFilename();
             Path fullFilePath = Paths.get(pathToSaveFile.toString(), fileName);
             Files.copy(dto.getFile().getInputStream(), fullFilePath, StandardCopyOption.REPLACE_EXISTING);
             Path pathToSaveDb = Paths.get("profiles", user.getUsername(), fileName);
