@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.DatatypeConverter;
@@ -142,26 +143,36 @@ public class UserController {
     @PutMapping("/users/data")
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_HR')")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public void updateUser(@RequestBody UserDTOForUpdateUser dto,
+    public void updateUser(@RequestParam(name = "file", required = false) MultipartFile file,
+                           @RequestParam(name = "mobile", required = false) String mobile,
+                           @RequestParam(name = "work", required = false) String work,
                            Principal principal) throws UserCredentialsException, IOException {
-        if (ValidationUtil.isNull(dto.getFile()) && ValidationUtil.isNullOrEmpty(dto.getMobile()) && ValidationUtil.isNullOrEmpty(dto.getHome())) {
+        if (ValidationUtil.isNull(file) && ValidationUtil.isNullOrEmpty(mobile) && ValidationUtil.isNullOrEmpty(work)) {
             throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_ONE_OR_MORE_FIELDS_ARE_EMPTY);
+        }
+
+        if (!ValidationUtil.isNullOrEmpty(mobile) && mobile.trim().length() != 10) {
+            throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_MOBILE_NUMBER_MUST_CONTAINS_TEN_CHARACTERS);
+        }
+
+        if (!ValidationUtil.isNullOrEmpty(work) && work.trim().length() != 4) {
+            throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_WORK_NUMBER_MUST_CONTAINS_FOUR_CHARACTERS);
         }
 
         User user = new User();
         user.setUsername(principal.getName());
 
-        if (dto.getFile() == null || dto.getFile().isEmpty()) {
+        if (file == null || file.isEmpty()) {
             user.setImgUrl(null);
 
         } else {
-            if (!(dto.getFile().getOriginalFilename().endsWith(".jpg")
-                    || dto.getFile().getOriginalFilename().endsWith(".jpeg")
-                    || dto.getFile().getOriginalFilename().endsWith(".png"))) {
+            if (!(file.getOriginalFilename().endsWith(".jpg")
+                    || file.getOriginalFilename().endsWith(".jpeg")
+                    || file.getOriginalFilename().endsWith(".png"))) {
                 throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_INVALID_FILE_TYPE);
             }
 
-            if (dto.getFile().getSize() >= maxFileSize) {
+            if (file.getSize() >= maxFileSize) {
                 throw new UserCredentialsException(MessageConstants.ERROR_MESSAGE_FILE_SIZE_MUST_BE_SMALLER_THAN_5MB);
             }
 
@@ -171,16 +182,16 @@ public class UserController {
                 Files.createDirectories(pathToSaveFile);
             }
 
-            String fileName = UUID.randomUUID() + "&&" + dto.getFile().getOriginalFilename();
+            String fileName = UUID.randomUUID() + "&&" + file.getOriginalFilename();
             Path fullFilePath = Paths.get(pathToSaveFile.toString(), fileName);
-            Files.copy(dto.getFile().getInputStream(), fullFilePath, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(file.getInputStream(), fullFilePath, StandardCopyOption.REPLACE_EXISTING);
             Path pathToSaveDb = Paths.get("profiles", user.getUsername(), fileName);
 
             user.setImgUrl(DatatypeConverter.printHexBinary(pathToSaveDb.toString().getBytes()));
         }
 
-        user.setMobile(dto.getMobile());
-        user.setHome(dto.getHome());
+        user.setMobile(mobile != null ? mobile.trim() : null);
+        user.setHome(work != null ? work.trim() : null);
 
         userService.updateUser(user);
     }
