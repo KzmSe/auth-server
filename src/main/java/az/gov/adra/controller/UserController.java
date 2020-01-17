@@ -98,22 +98,19 @@ public class UserController {
         }
 
         int total = userService.findCountOfAllUsersByBirthDate();
-        System.out.println(total);
         int totalPages = 0;
         int offset = 0;
 
         if (total != 0) {
-            totalPages = (int) Math.ceil((double) total / 10);
+            totalPages = (int) Math.ceil((double) total / 9);
 
             if (page != null && page >= totalPages) {
-                offset = (totalPages - 1) * 10;
+                offset = (totalPages - 1) * 9;
 
             } else if (page != null && page > 1) {
-                offset = (page - 1) * 10;
+                offset = (page - 1) * 9;
             };
         }
-
-        System.out.println(offset);
 
         List<User> users = userService.findUsersByBirthDate(offset);
         for (User user : users) {
