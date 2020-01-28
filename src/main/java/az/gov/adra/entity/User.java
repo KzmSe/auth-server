@@ -21,6 +21,7 @@ public class User {
     private String token;
     private String name;
     private String surname;
+    private String fullname;
     private String midname;
     private String gender;
     private String dateOfBirth;

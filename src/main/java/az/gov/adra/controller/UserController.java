@@ -40,6 +40,7 @@ public class UserController {
     public GenericResponse findAllUsers() throws UserCredentialsException {
         List<User> users = userService.findAllUsers();
         for (User user : users) {
+            user.setFullname(user.getName() + " " + user.getSurname());
             if (user.getImgUrl() == null) {
                 continue;
             }
