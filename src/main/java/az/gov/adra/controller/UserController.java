@@ -1,9 +1,9 @@
 package az.gov.adra.controller;
 
 import az.gov.adra.constant.MessageConstants;
-import az.gov.adra.dataTransferObject.UserDTOForUpdateUser;
 import az.gov.adra.entity.User;
 import az.gov.adra.entity.response.GenericResponse;
+import az.gov.adra.entity.response.GenericResponseBuilder;
 import az.gov.adra.exception.UserCredentialsException;
 import az.gov.adra.service.interfaces.UserService;
 import az.gov.adra.util.ResourceUtil;
@@ -37,7 +37,7 @@ public class UserController {
 
     @GetMapping("/users")
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_HR')")
-    public GenericResponse findAllUsers() throws UserCredentialsException {
+    public GenericResponse findAllUsers() {
         List<User> users = userService.findAllUsers();
         for (User user : users) {
             user.setFullname(user.getName() + " " + user.getSurname());
@@ -47,7 +47,11 @@ public class UserController {
             user.setImgUrl(ResourceUtil.convertToString(user.getImgUrl()));
         }
 
-        return GenericResponse.withSuccess(HttpStatus.OK, "list of users", users);
+        return new GenericResponseBuilder()
+                .withStatus(HttpStatus.OK.value())
+                .withDescription("list of users")
+                .withData(users)
+                .build();
     }
 
     @GetMapping("/users/me")
@@ -55,7 +59,11 @@ public class UserController {
     public GenericResponse findMe(final Principal principal) throws UserCredentialsException {
         User user = userService.findUserByUsername(principal.getName());
         user.setImgUrl(ResourceUtil.convertToString(user.getImgUrl()));
-        return GenericResponse.withSuccess(HttpStatus.OK, "me", user);
+        return new GenericResponseBuilder()
+                .withStatus(HttpStatus.OK.value())
+                .withDescription("me")
+                .withData(user)
+                .build();
     }
 
     @GetMapping("/users/{username}")
@@ -67,7 +75,11 @@ public class UserController {
 
         User user = userService.findUserByUsername(username);
         user.setImgUrl(ResourceUtil.convertToString(user.getImgUrl()));
-        return GenericResponse.withSuccess(HttpStatus.OK, "specific user by username", user);
+        return new GenericResponseBuilder()
+                .withStatus(HttpStatus.OK.value())
+                .withDescription("specific user by username")
+                .withData(user)
+                .build();
     }
 
 //    @GetMapping("/users/count")
@@ -87,7 +99,11 @@ public class UserController {
             }
             user.setImgUrl(ResourceUtil.convertToString(user.getImgUrl()));
         }
-        return GenericResponse.withSuccess(HttpStatus.OK, "list of random users", users);
+        return new GenericResponseBuilder()
+                .withStatus(HttpStatus.OK.value())
+                .withDescription("list of random users")
+                .withData(users)
+                .build();
     }
 
     @GetMapping("/users/birth-date")
@@ -122,7 +138,12 @@ public class UserController {
         }
 
         response.addIntHeader("Total-Pages", totalPages);
-        return GenericResponse.withSuccess(HttpStatus.OK, "list of all users by birth date", users);
+        return new GenericResponseBuilder()
+                .withStatus(HttpStatus.OK.value())
+                .withDescription("list of all users by birth date")
+                .withData(users)
+                .withTotalPages(totalPages)
+                .build();
     }
 
     @GetMapping("/users/birth-date/top-three")
@@ -135,7 +156,11 @@ public class UserController {
             }
             user.setImgUrl(ResourceUtil.convertToString(user.getImgUrl()));
         }
-        return GenericResponse.withSuccess(HttpStatus.OK, "list of top three users by birth date", users);
+        return new GenericResponseBuilder()
+                .withStatus(HttpStatus.OK.value())
+                .withDescription("list of top three users by birth date")
+                .withData(users)
+                .build();
     }
 
     @PutMapping("/users/data")

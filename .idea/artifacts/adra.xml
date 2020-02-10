@@ -23,7 +23,6 @@
           <element id="library" level="project" name="Maven: org.springframework:spring-beans:5.1.11.RELEASE" />
           <element id="library" level="project" name="Maven: org.springframework:spring-tx:5.1.11.RELEASE" />
           <element id="library" level="project" name="Maven: com.microsoft.sqlserver:mssql-jdbc:6.4.0.jre8" />
-          <element id="library" level="project" name="Maven: org.projectlombok:lombok:1.18.10" />
           <element id="library" level="project" name="Maven: org.springframework.boot:spring-boot-starter-data-jpa:2.1.10.RELEASE" />
           <element id="library" level="project" name="Maven: org.springframework.boot:spring-boot-starter-aop:2.1.10.RELEASE" />
           <element id="library" level="project" name="Maven: org.aspectj:aspectjweaver:1.9.4" />
@@ -88,6 +87,7 @@
           <element id="library" level="project" name="Maven: org.springframework:spring-context-support:5.1.11.RELEASE" />
           <element id="library" level="project" name="Maven: com.sun.mail:javax.mail:1.6.2" />
           <element id="library" level="project" name="Maven: javax.activation:activation:1.1" />
+          <element id="library" level="project" name="Maven: org.projectlombok:lombok:1.18.10" />
         </element>
       </element>
       <element id="javaee-facet-resources" facet="auth-server/web/Web" />

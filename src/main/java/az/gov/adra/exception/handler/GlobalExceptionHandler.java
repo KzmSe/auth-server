@@ -2,8 +2,8 @@ package az.gov.adra.exception.handler;
 
 import az.gov.adra.entity.response.Exception;
 import az.gov.adra.entity.response.GenericResponse;
-import az.gov.adra.exception.*;
-import org.springframework.beans.factory.annotation.Value;
+import az.gov.adra.entity.response.GenericResponseBuilder;
+import az.gov.adra.exception.UserCredentialsException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -15,9 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @Value("${spring.app-name}")
-    private String appName;
-
     @ExceptionHandler(DataAccessException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public GenericResponse handleDataAccessException(DataAccessException e) {
@@ -27,7 +24,12 @@ public class GlobalExceptionHandler {
         exception.setMessage(e.getMessage());
         exception.setErrorStack("DataAccessException.");
 
-        return GenericResponse.withException(HttpStatus.INTERNAL_SERVER_ERROR, "DataAccessException", exception);
+        return new GenericResponseBuilder()
+                .withStatus(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .withDescription("DataAccessException")
+                .withException(exception)
+                .build();
+
     }
 
     @ExceptionHandler(NumberFormatException.class)
@@ -39,7 +41,11 @@ public class GlobalExceptionHandler {
         exception.setMessage(e.getMessage());
         exception.setErrorStack("NumberFormatException.");
 
-        return GenericResponse.withException(HttpStatus.INTERNAL_SERVER_ERROR, "NumberFormatException", exception);
+        return new GenericResponseBuilder()
+                .withStatus(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .withDescription("NumberFormatException")
+                .withException(exception)
+                .build();
     }
 
     @ExceptionHandler(UserCredentialsException.class)
@@ -51,7 +57,11 @@ public class GlobalExceptionHandler {
         exception.setMessage(e.getMessage());
         exception.setErrorStack("UserCredentialsException.");
 
-        return GenericResponse.withException(HttpStatus.INTERNAL_SERVER_ERROR, "UserCredentialsException", exception);
+        return new GenericResponseBuilder()
+                .withStatus(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .withDescription("UserCredentialsException")
+                .withException(exception)
+                .build();
     }
 
 }
